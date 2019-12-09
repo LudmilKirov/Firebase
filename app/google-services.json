@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "823933709010",
+    "firebase_url": "https://raspberrytoandroid.firebaseio.com",
+    "project_id": "raspberrytoandroid",
+    "storage_bucket": "raspberrytoandroid.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:823933709010:android:e1fc75c739791da2fe5b0b",
+        "android_client_info": {
+          "package_name": "com.datecs.firebasediplomna"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "823933709010-0so2dcdeotsbvlecb0l4a77eqildifin.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.datecs.firebasediplomna",
+            "certificate_hash": "7281e64db1378696faaff0eb19258333646e16a4"
+          }
+        },
+        {
+          "client_id": "823933709010-bopse0cfrvpdgn1vp3bau7877ltso7hh.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyALxkeyf90kF1Xm5SBpsuWpo5Rt775EhBU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "823933709010-bopse0cfrvpdgn1vp3bau7877ltso7hh.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
