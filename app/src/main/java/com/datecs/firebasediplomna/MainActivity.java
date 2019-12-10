@@ -86,7 +86,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        scheduleJob();
+
         setContentView(R.layout.activity_main);
         pieChart = findViewById(R.id.piechart);
        //pieChart.setUsePercentValues(true);
@@ -249,6 +249,7 @@ public class MainActivity extends AppCompatActivity {
                // pieChart.setEntryLabelTextSize(12f);
                 Log.d(TAG, "showData:kurvalue   " + value);
                 Log.d(TAG, "showData: kurec " + dateInfo.getTemperature());
+                scheduleJob();
 
             }
         averageTemperature=0;
@@ -271,5 +272,7 @@ public class MainActivity extends AppCompatActivity {
             Toast.makeText(this,R.string.google_app_id,Toast.LENGTH_SHORT).show();
         }
     }
+
+  //  String condition = "Otput ''"
 
 }
