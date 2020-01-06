@@ -168,10 +168,12 @@ public class MainActivity extends AppCompatActivity {
 
                         //Increase the average temperature for each da
                         //averageTemperature += Integer.valueOf(ds.getValue().toString().substring(13, 15));
-                    Log.d(TAG, "showData: ku4"+Integer.valueOf(ds.getValue().toString().substring(10, 12)));
-                        averageInput += Integer.valueOf(ds.getValue().toString().substring(5, 6));
-                        averageOutput += Integer.valueOf(ds.getValue().toString().substring(10, 12));
-                    Log.d(TAG, "showData: ku4"+averageInput+"    "+averageOutput);
+                    Log.d(TAG, "showData: ku4"+ds.getValue());
+                    Log.d(TAG, "showData: ku4"+array.get(0).substring(2,4));
+                    //Log.d(TAG, "showData: ku4"+Integer.valueOf(array.get(0)));
+                    //averageInput += Integer.valueOf(array.get(0).toString().substring(2, 4));
+                      // averageOutput += Integer.valueOf(array.get(0).toString().substring(8, 10));
+                  // Log.d(TAG, "showData: ku4"+averageInput+"    "+averageOutput);
                         //Set the values for the date
                         //dateInfo.setTemperature(ds.getValue().toString().substring(13, 15));
                         //dateInfo.setOutputVoltage(String.valueOf(averageInput));
