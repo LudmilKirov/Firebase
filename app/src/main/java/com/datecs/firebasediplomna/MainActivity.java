@@ -40,6 +40,7 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+import java.lang.reflect.Array;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -71,7 +72,7 @@ public class MainActivity extends AppCompatActivity {
     private float averageInput;
     private float averageOutput;
     private int connectionCount;
-    private boolean wantNotification;
+    private boolean wantNotification=true;
     private boolean isConnect = false;
     private SimpleDateFormat formater = new SimpleDateFormat("dd MM yyyy kk:mm:ss:SSSS");
     private JobScheduler scheduler;
@@ -80,10 +81,13 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        myRef = database.getReference();
+        //Get reference to firebase
+        myRef = database.getReference().child("InputVoltage");
+        //add a listener for notifications
         myRef.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                //If the user want notifications
                 if (wantNotification) {
                     scheduleJob(dataSnapshot);
                 }
@@ -114,10 +118,14 @@ public class MainActivity extends AppCompatActivity {
                 int month1 = mDatePicker.getMonth();
                 int day1 = mDatePicker.getDayOfMonth();
                 Date date1 = new GregorianCalendar(year1, month1, day1).getTime();
+                //get the time that is needed in long format
                 long requiredTime = date1.getTime();
+                //get the date needed in date format
                 date2 = new Date(requiredTime);
+                //get the required date in a string format
                 requiredDate = Long.toString(requiredTime);
-
+                Log.d(TAG, "onClick: data"+date2);
+                //set a listener for the statistic
                 myRef.addValueEventListener(new ValueEventListener() {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
@@ -133,37 +141,49 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void showData(DataSnapshot dataSnapshot) {
-        String selectedDate = date2.toString().substring(4, 10).concat(date2.toString().substring(30, 34));
-
+        //isConnect=false;
+        //Get the day and the month and the year from the choosen date
+        String selectedDate = date2.toString().substring(30,34).concat(date2.toString().substring(8, 10));
+        //Log.d(TAG, "showData: putka"+selectedDate);
+        //Iterate over the elements in the database
         for (DataSnapshot ds : dataSnapshot.getChildren()) {
-            if (!(ds.getKey().equals("DataForMonitoring"))) {
+           // Log.d(TAG, "showData: putka"+ds);
+            //if ((ds.getKey().equals("InputVoltage"))) {
 
-                Long dateLong = Long.valueOf(ds.getKey());
-                Date date = new Date(dateLong);
-                //String currentDate = String.valueOf(date.getDay()+date.getMonth()+date.getYear());
-                String currentDate = date.toString().substring(4, 10).concat(date.toString().substring(30, 34));
-
+            ArrayList<String> array;
+            array= (ArrayList<String>) ds.getValue();
+           // Log.d(TAG, "showData: putka"+array.get(1));
+                //If it is a date get the month day and the year
+               // Long dateLong = Long.valueOf(ds.getKey());
+               // Date date = new Date(dateLong);
+                String currentDate = array.get(1).substring(0,4).concat(array.get(1).substring(8,10));
+            Log.d(TAG, "showData: putka"+selectedDate);
+                //If they match with the selected date
                 if (selectedDate.equals(currentDate)) {
+                    //Increase the counter and set there is a match
                     isConnect = true;
                     connectionCount++;
+                    //Options with a dots buts will not include them in the database,if there is a need
+                    // of them will make more accurete substrings,for now working only without dots
 
-                    if (ds.getValue().toString().contains(".")) {
-                        dateInfo.setTemperature(ds.getValue().toString().substring(12, 13));
-                    } else {
-                        averageTemperature += Integer.valueOf(ds.getValue().toString().substring(13, 15));
-                        averageInput += Integer.valueOf(ds.getValue().toString().substring(31, 33));
-                        averageOutput += Integer.valueOf(ds.getValue().toString().substring(50, 51));
+                        //Increase the average temperature for each da
+                        //averageTemperature += Integer.valueOf(ds.getValue().toString().substring(13, 15));
+                    Log.d(TAG, "showData: ku4"+Integer.valueOf(ds.getValue().toString().substring(10, 12)));
+                        averageInput += Integer.valueOf(ds.getValue().toString().substring(5, 6));
+                        averageOutput += Integer.valueOf(ds.getValue().toString().substring(10, 12));
+                    Log.d(TAG, "showData: ku4"+averageInput+"    "+averageOutput);
+                        //Set the values for the date
+                        //dateInfo.setTemperature(ds.getValue().toString().substring(13, 15));
+                        //dateInfo.setOutputVoltage(String.valueOf(averageInput));
+                       // dateInfo.setInputVoltage(String.valueOf(averageOutput));
 
-                        dateInfo.setTemperature(ds.getValue().toString().substring(13, 15));
-                        dateInfo.setOutputVoltage(ds.getValue().toString().substring(31, 33));
-                        dateInfo.setInputVoltage(ds.getValue().toString().substring(50, 51));
-                    }
                 }
-            }
+           // }
         }
+        //When the matches stop get the average values
         averageOutput /= connectionCount;
         averageInput /= connectionCount;
-        averageTemperature /= connectionCount;
+      //  averageTemperature /= connectionCount;
 
         if (isConnect) {
             //  BarData barData = new BarData((List<IBarDataSet>) pieDataSet);
