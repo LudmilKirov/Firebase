@@ -40,7 +40,9 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Array;
+import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -71,8 +73,9 @@ public class MainActivity extends AppCompatActivity {
     private float averageTemperature;
     private float averageInput;
     private float averageOutput;
+    private int connectionCountforNotification;
     private int connectionCount;
-    private boolean wantNotification=true;
+    private boolean wantNotification = true;
     private boolean isConnect = false;
     private SimpleDateFormat formater = new SimpleDateFormat("dd MM yyyy kk:mm:ss:SSSS");
     private JobScheduler scheduler;
@@ -88,6 +91,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 //If the user want notifications
+                Log.d(TAG, "onDataChange: notifikacii"+wantNotification);
                 if (wantNotification) {
                     scheduleJob(dataSnapshot);
                 }
@@ -124,14 +128,12 @@ public class MainActivity extends AppCompatActivity {
                 date2 = new Date(requiredTime);
                 //get the required date in a string format
                 requiredDate = Long.toString(requiredTime);
-                Log.d(TAG, "onClick: data"+date2);
                 //set a listener for the statistic
                 myRef.addValueEventListener(new ValueEventListener() {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                         showData(dataSnapshot);
                     }
-
                     @Override
                     public void onCancelled(@NonNull DatabaseError databaseError) {
                     }
@@ -141,51 +143,51 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void showData(DataSnapshot dataSnapshot) {
-        //isConnect=false;
         //Get the day and the month and the year from the choosen date
-        String selectedDate = date2.toString().substring(30,34).concat(date2.toString().substring(8, 10));
-        //Log.d(TAG, "showData: putka"+selectedDate);
+        String selectedDate = date2.toString().substring(30, 34).concat(date2.toString().substring(8, 10));
         //Iterate over the elements in the database
         for (DataSnapshot ds : dataSnapshot.getChildren()) {
-           // Log.d(TAG, "showData: putka"+ds);
-            //if ((ds.getKey().equals("InputVoltage"))) {
-
+            //Get the elements in the database as a array
             ArrayList<String> array;
-            array= (ArrayList<String>) ds.getValue();
-           // Log.d(TAG, "showData: putka"+array.get(1));
-                //If it is a date get the month day and the year
-               // Long dateLong = Long.valueOf(ds.getKey());
-               // Date date = new Date(dateLong);
-                String currentDate = array.get(1).substring(0,4).concat(array.get(1).substring(8,10));
-            Log.d(TAG, "showData: putka"+selectedDate);
-                //If they match with the selected date
-                if (selectedDate.equals(currentDate)) {
-                    //Increase the counter and set there is a match
-                    isConnect = true;
-                    connectionCount++;
-                    //Options with a dots buts will not include them in the database,if there is a need
-                    // of them will make more accurete substrings,for now working only without dots
+            array = (ArrayList<String>) ds.getValue();
+            //Get the current date same format as the selected date
+            String currentDate = array.get(1).substring(0, 4).concat(array.get(1).substring(8, 10));
+            //If they match with the selected date
+            if (selectedDate.equals(currentDate)) {
+                String neededValue = "";
+                //Increase the counter and set there is a match
+                isConnect = true;
+                connectionCount++;
 
-                        //Increase the average temperature for each da
-                        //averageTemperature += Integer.valueOf(ds.getValue().toString().substring(13, 15));
-                    Log.d(TAG, "showData: ku4"+ds.getValue());
-                    Log.d(TAG, "showData: ku4"+array.get(0).substring(2,4));
-                    //Log.d(TAG, "showData: ku4"+Integer.valueOf(array.get(0)));
-                    //averageInput += Integer.valueOf(array.get(0).toString().substring(2, 4));
-                      // averageOutput += Integer.valueOf(array.get(0).toString().substring(8, 10));
-                  // Log.d(TAG, "showData: ku4"+averageInput+"    "+averageOutput);
-                        //Set the values for the date
-                        //dateInfo.setTemperature(ds.getValue().toString().substring(13, 15));
-                        //dateInfo.setOutputVoltage(String.valueOf(averageInput));
-                       // dateInfo.setInputVoltage(String.valueOf(averageOutput));
+                //Set the number of different unicodes match to zero
+                int countForBytes = 0;
 
+                String unicode = array.get(0);
+                byte[] arr;
+                arr = unicode.getBytes(StandardCharsets.UTF_8);
+
+                for (byte a : arr) {
+                    //Increase the number of different unicodes
+                    countForBytes++;
+                    //Get the second element of the array of data from the raspberry
+                    if (countForBytes == 2) {
+
+                        neededValue = String.valueOf(a);
+                    }
                 }
-           // }
+                //Get total count of inputs for input voltage
+                averageInput += Integer.valueOf(neededValue);
+                // averageOutput += Integer.valueOf(array.get(0).toString().substring(8, 10));
+
+                //Set the values for the date
+                //dateInfo.setTemperature(ds.getValue().toString().substring(13, 15));
+                //dateInfo.setOutputVoltage(String.valueOf(averageInput));
+                // dateInfo.setInputVoltage(String.valueOf(averageOutput));
+            }
         }
         //When the matches stop get the average values
         averageOutput /= connectionCount;
         averageInput /= connectionCount;
-      //  averageTemperature /= connectionCount;
 
         if (isConnect) {
             //  BarData barData = new BarData((List<IBarDataSet>) pieDataSet);
@@ -198,28 +200,30 @@ public class MainActivity extends AppCompatActivity {
             pieChart.setTransparentCircleRadius(0f);
 
             value.clear();
-            value.add(new PieEntry(averageOutput, "Ouput"));
-            value.add(new PieEntry(averageTemperature, "Temperature"));
+            // value.add(new PieEntry(averageOutput, "Ouput"));
+            //value.add(new PieEntry(averageTemperature, "Temperature"));
             value.add(new PieEntry(averageInput, "Input"));
 
             PieDataSet pieDataSet = new PieDataSet(value, "");
             // add a lot of colors
-
             ArrayList<Integer> colors = new ArrayList<>();
 
             for (int c : ColorTemplate.PASTEL_COLORS)
                 colors.add(c);
 
             colors.add(ColorTemplate.getHoloBlue());
-
+            //Set the colors for the chart
             pieDataSet.setColors(colors);
             PieData data = new PieData(pieDataSet);
             data.setValueFormatter(new PercentFormatter(pieChart));
-            data.setValueTextSize(11f);
+            //Set the text size
+            data.setValueTextSize(13f);
+            //Set the text color
             data.setValueTextColor(Color.WHITE);
+            //Set the data
             pieChart.setData(data);
             pieData = new PieData(pieDataSet);
-
+            //Set the colors and the animations for the chart
             pieDataSet.setColors(ColorTemplate.PASTEL_COLORS);
             pieChart.setEntryLabelColor(0);
             pieChart.animateXY(1400, 1400);
@@ -236,19 +240,35 @@ public class MainActivity extends AppCompatActivity {
         ComponentName serviceName = new ComponentName(getPackageName(), NotificationJobService.class.getName());
         JobInfo.Builder builder = new JobInfo.Builder(JOB_ID, serviceName)
                 .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY);
-        int temp = 21;
+        int temp = 0;
 
         for (DataSnapshot ds : dataSnapshot.getChildren()) {
-            if ((ds.getKey().equals("DataForMonitoring"))) {
-                int endValue = ds.getValue().toString().length() - 1;
-                temp = Integer.parseInt(ds.getValue().toString().substring(8, endValue));
-            }
-        }
-        boolean constraintSet = MAX_OUTPUT_VOLTAGE < temp;
+            ArrayList<String> array;
+            array = (ArrayList<String>) ds.getValue();
+             connectionCountforNotification++;
+            //Set the number of different unicodes match to zero
+            int countForBytes = 0;
 
-        if (constraintSet) {
-            JobInfo myJobInfo = builder.build();
-            scheduler.schedule(myJobInfo);
+            String unicode = array.get(0);
+            byte[] arr;
+            arr = unicode.getBytes(StandardCharsets.UTF_8);
+
+            for (byte a : arr) {
+                //Increase the number of different unicodes
+                countForBytes++;
+                //Get the second element of the array of data from the raspberry
+                if (countForBytes == 2) {
+                    temp = (int) a;
+                    Log.d(TAG, "scheduleJob: temperatura"+temp);
+                }
+
+            }
+            boolean constraintSet = MAX_OUTPUT_VOLTAGE < temp;
+
+            if (constraintSet) {
+                JobInfo myJobInfo = builder.build();
+                scheduler.schedule(myJobInfo);
+            }
         }
     }
 
