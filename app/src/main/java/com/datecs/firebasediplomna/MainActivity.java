@@ -43,6 +43,7 @@ import com.google.firebase.database.ValueEventListener;
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Array;
 import java.nio.charset.StandardCharsets;
+import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -56,9 +57,14 @@ import static android.graphics.ColorSpace.Model.RGB;
 
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = "Tag";
-    private static final int MAX_OUTPUT_VOLTAGE = 6;
+    private static final double MAX_OUTPUT_VOLTAGE = 5.0;
     private static final int JOB_ID = 0;
-
+    private int byte2=0;
+    private int byte1=0;
+    private String byte2String;
+    private String byte1String;
+    private  String formattedForByte1;
+    private String formattedForByte2;
     private FirebaseDatabase database = FirebaseDatabase.getInstance();
     private DatabaseReference myRef;
     private DatePicker mDatePicker;
@@ -96,7 +102,6 @@ public class MainActivity extends AppCompatActivity {
                     scheduleJob(dataSnapshot);
                 }
             }
-
             @Override
             public void onCancelled(@NonNull DatabaseError databaseError) {
             }
@@ -166,17 +171,9 @@ public class MainActivity extends AppCompatActivity {
                 byte[] arr;
                 arr = unicode.getBytes(StandardCharsets.UTF_8);
 
-                for (byte a : arr) {
-                    //Increase the number of different unicodes
-                    countForBytes++;
-                    //Get the second element of the array of data from the raspberry
-                    if (countForBytes == 2) {
-
-                        neededValue = String.valueOf(a);
-                    }
-                }
                 //Get total count of inputs for input voltage
-                averageInput += Integer.valueOf(neededValue);
+                Log.d(TAG, "showData: gledam"+getSum(arr));
+                averageInput += getSum(arr);
                 // averageOutput += Integer.valueOf(array.get(0).toString().substring(8, 10));
 
                 //Set the values for the date
@@ -240,30 +237,18 @@ public class MainActivity extends AppCompatActivity {
         ComponentName serviceName = new ComponentName(getPackageName(), NotificationJobService.class.getName());
         JobInfo.Builder builder = new JobInfo.Builder(JOB_ID, serviceName)
                 .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY);
-        int temp = 0;
+        int countForBytes = 0;
 
         for (DataSnapshot ds : dataSnapshot.getChildren()) {
             ArrayList<String> array;
             array = (ArrayList<String>) ds.getValue();
              connectionCountforNotification++;
             //Set the number of different unicodes match to zero
-            int countForBytes = 0;
-
             String unicode = array.get(0);
             byte[] arr;
             arr = unicode.getBytes(StandardCharsets.UTF_8);
 
-            for (byte a : arr) {
-                //Increase the number of different unicodes
-                countForBytes++;
-                //Get the second element of the array of data from the raspberry
-                if (countForBytes == 2) {
-                    temp = (int) a;
-                    Log.d(TAG, "scheduleJob: temperatura"+temp);
-                }
-
-            }
-            boolean constraintSet = MAX_OUTPUT_VOLTAGE < temp;
+            boolean constraintSet = MAX_OUTPUT_VOLTAGE < getSum(arr);
 
             if (constraintSet) {
                 JobInfo myJobInfo = builder.build();
@@ -297,5 +282,48 @@ public class MainActivity extends AppCompatActivity {
             }
         });
         return true;
+    }
+
+    private double getSum(byte[] arr) {
+        int countForBytes=0;
+        for (byte a : arr) {
+            //Increase the number of different unicodes
+            countForBytes++;
+            if (countForBytes == 1) {
+                byte1 = (int) a;
+                byte1String = (Integer.toBinaryString(byte1));
+                if (byte1 > 31) {
+                    formattedForByte1 = ("000000000000" + byte1String).substring(byte1String.length());
+                }
+                if (byte1 > 15) {
+                    formattedForByte1 = ("00000000" + byte1String).substring(byte1String.length());
+                } else {
+                    formattedForByte1 = ("0000" + byte1String).substring(byte1String.length());
+                }
+                Log.d(TAG, "scheduleJob: vhodno" + formattedForByte1);
+            }
+            //Get the second element of the array of data from the raspberry
+            if (countForBytes == 2) {
+                byte2 = (int) a;
+
+                byte2String = Integer.toBinaryString(byte2);
+                if (byte2 > 31) {
+                    formattedForByte2 = ("000000000000" + byte2String).substring(byte2String.length());
+                }
+                else if (byte2 > 15) {
+                    formattedForByte2 = ("00000000" + byte2String).substring(byte2String.length());
+                } else {
+                    formattedForByte2 = ("0000" + byte2String).substring(byte2String.length());
+                }
+
+                Log.d(TAG, "scheduleJob: vhodno" + formattedForByte2);
+            }
+
+        }
+        countForBytes = 0;
+        String concatanatedBytes = formattedForByte2.concat(formattedForByte1);
+        int decimalValue = Integer.parseInt(concatanatedBytes, 2);
+        double checkSum = (decimalValue * 15) / 4095;
+        return checkSum;
     }
 }
